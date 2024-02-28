@@ -66,4 +66,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // Flexible Bottom Sheet
+    implementation("com.github.skydoves:flexible-bottomsheet-material3:0.1.2")
 }
