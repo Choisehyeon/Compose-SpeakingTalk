@@ -20,7 +20,6 @@ class NotificationListener : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         super.onNotificationPosted(sbn)
-
         if (sbn?.packageName.equals("com.kakao.talk")) {
             val bundle = sbn?.notification?.extras
             if (bundle != null) {
