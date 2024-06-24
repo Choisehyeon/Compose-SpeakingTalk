@@ -33,9 +33,9 @@ class OnOffScreenViewModel: ViewModel() {
         )
     }
 
-    fun updateNotificationState() {
+    fun updateNotificationState(isChecked: Boolean) {
         _onOffScreeUIState.value = _onOffScreeUIState.value.copy(
-            isNotificationChecked = !_onOffScreeUIState.value.isNotificationChecked
+            isNotificationChecked = isChecked
         )
     }
 

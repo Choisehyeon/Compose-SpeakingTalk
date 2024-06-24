@@ -64,7 +64,7 @@ fun BottomSheetContainer(
     onBluetoothChanged: () -> Unit,
     onSliderValueChanged: (Float) -> Unit,
     onSelectedItemChanged: (String) -> Unit,
-    onNotificationChanged: () -> Unit,
+    onNotificationChanged: (Boolean) -> Unit,
     onSenderCheckChanged: () -> Unit,
     onTimeCheckChanged: () -> Unit,
     ) {
@@ -171,7 +171,7 @@ fun SettingSound(
     uiState: OnOffScreenUIState,
     onSliderValueChanged: (Float) -> Unit,
     onSelectedItemChanged: (String) -> Unit,
-    onNotificationChanged: () -> Unit,
+    onNotificationChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -220,7 +220,7 @@ fun SettingSound(
                 SettingToggleItem(
                     title = "진동 알림",
                     checked = uiState.isNotificationChecked,
-                    onCheckedChange = { onNotificationChanged() })
+                    onCheckedChange = { onNotificationChanged(!uiState.isNotificationChecked) })
             }
         }
     }

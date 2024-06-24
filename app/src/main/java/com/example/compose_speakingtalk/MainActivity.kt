@@ -9,6 +9,7 @@ import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -48,6 +49,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setTextToSpeech()
         initAudioVolume()
+        initRingerMode()
         initCollect()
         if (!permissionGranted()) {
             val intent = Intent(
@@ -92,12 +94,17 @@ class MainActivity : ComponentActivity() {
         onOffScreenViewModel.updateSliderValue(currentVolume.toFloat())
     }
 
+    private fun initRingerMode() {
+        onOffScreenViewModel.updateNotificationState(audioManager.ringerMode == AudioManager.RINGER_MODE_VIBRATE)
+    }
+
     private fun initCollect() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 onOffScreenViewModel.onOffScreenUIState.collect {
                     textToSpeech.setSpeechRate(it.selectedSpeed.toFloat())
                     setAudioVolume(it.sliderValue)
+                    setRingerMode(it.isNotificationChecked)
                 }
             }
         }
@@ -124,6 +131,10 @@ class MainActivity : ComponentActivity() {
             (audioManager.getStreamMaxVolume(AudioManager.STREAM_RING) * value / 100.0).toInt(),
             0
         )
+    }
+
+    private fun setRingerMode(value: Boolean) {
+        audioManager.ringerMode = if (value) AudioManager.RINGER_MODE_VIBRATE else AudioManager.RINGER_MODE_NORMAL
     }
 
     override fun onPause() {
