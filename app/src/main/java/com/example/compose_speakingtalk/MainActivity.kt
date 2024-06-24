@@ -25,6 +25,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.compose.ComposespeakingtalkTheme
 import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
@@ -121,7 +125,19 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun speak(sender: String?, content: String?) {
-        val result = sender + content
+        var result = ""
+        if(onOffScreenViewModel.onOffScreenUIState.value.isSenderChecked) {
+            result += "$sender "
+        }
+        if((content?.length ?: 0) >= 20) {
+            result += "장문의 메세지이니 나중에 확인하시기 바랍니다."
+        } else {
+            result += content
+        }
+        if(onOffScreenViewModel.onOffScreenUIState.value.isSendTimeChecked) {
+            val formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분")
+            result += LocalDateTime.now().format(formatter)
+        }
         textToSpeech.speak(result, 0, null, null)
     }
 
