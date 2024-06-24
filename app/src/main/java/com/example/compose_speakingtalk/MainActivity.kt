@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
@@ -29,13 +30,14 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var textToSpeech: TextToSpeech
     private val onOffScreenViewModel: OnOffScreenViewModel by viewModels()
+    private val audioManager by lazy { getSystemService(Context.AUDIO_SERVICE) as AudioManager }
 
     private val kakaoReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action.equals(NotificationListener.ACTION_TAG)) {
                 val sender = intent?.getStringExtra("sender")
                 val content = intent?.getStringExtra("content")
-                if(onOffScreenViewModel.onOffScreenUIState.value.isOn) {
+                if (onOffScreenViewModel.onOffScreenUIState.value.isOn) {
                     speak(sender, content)
                 }
             }
@@ -45,6 +47,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTextToSpeech()
+        initAudioVolume()
         initCollect()
         if (!permissionGranted()) {
             val intent = Intent(
@@ -52,7 +55,10 @@ class MainActivity : ComponentActivity() {
             )
             startActivity(intent)
         }
-        val permissions = arrayOf(Manifest.permission.RECORD_AUDIO)
+        val permissions = arrayOf(
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.ACCESS_NOTIFICATION_POLICY
+        )
         ActivityCompat.requestPermissions(this, permissions, 0)
         setContent {
             ComposespeakingtalkTheme {
@@ -81,12 +87,17 @@ class MainActivity : ComponentActivity() {
         return sets.contains(packageName)
     }
 
+    private fun initAudioVolume() {
+        val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        onOffScreenViewModel.updateSliderValue(currentVolume.toFloat())
+    }
+
     private fun initCollect() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 onOffScreenViewModel.onOffScreenUIState.collect {
                     textToSpeech.setSpeechRate(it.selectedSpeed.toFloat())
-
+                    setAudioVolume(it.sliderValue)
                 }
             }
         }
@@ -105,6 +116,14 @@ class MainActivity : ComponentActivity() {
     private fun speak(sender: String?, content: String?) {
         val result = sender + content
         textToSpeech.speak(result, 0, null, null)
+    }
+
+    private fun setAudioVolume(value: Float) {
+        audioManager.setStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            (audioManager.getStreamMaxVolume(AudioManager.STREAM_RING) * value / 100.0).toInt(),
+            0
+        )
     }
 
     override fun onPause() {

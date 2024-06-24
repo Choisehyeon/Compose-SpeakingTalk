@@ -234,8 +234,6 @@ fun SettingTextContent(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var checkedSender by remember { mutableStateOf(false) }
-    var checkedTime by remember { mutableStateOf(false) }
 
     Column {
         Card(
