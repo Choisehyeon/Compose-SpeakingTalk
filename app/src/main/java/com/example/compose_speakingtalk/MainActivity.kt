@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -17,19 +18,26 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.compose.ComposespeakingtalkTheme
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var textToSpeech: TextToSpeech
+    private val onOffScreenViewModel: OnOffScreenViewModel by viewModels()
 
     private val kakaoReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action.equals(NotificationListener.ACTION_TAG)) {
                 val sender = intent?.getStringExtra("sender")
                 val content = intent?.getStringExtra("content")
-                speak(sender, content)
+                if(onOffScreenViewModel.onOffScreenUIState.value.isOn) {
+                    speak(sender, content)
+                }
             }
         }
     }
@@ -37,6 +45,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTextToSpeech()
+        initCollect()
         if (!permissionGranted()) {
             val intent = Intent(
                 "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"
@@ -51,7 +60,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    OnOffScreen()
+                    OnOffScreen(onOffScreenViewModel)
                 }
             }
         }
@@ -70,6 +79,17 @@ class MainActivity : ComponentActivity() {
     private fun permissionGranted(): Boolean {
         val sets = NotificationManagerCompat.getEnabledListenerPackages(this)
         return sets.contains(packageName)
+    }
+
+    private fun initCollect() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                onOffScreenViewModel.onOffScreenUIState.collect {
+                    textToSpeech.setSpeechRate(it.selectedSpeed.toFloat())
+
+                }
+            }
+        }
     }
 
 

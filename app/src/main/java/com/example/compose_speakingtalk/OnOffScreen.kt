@@ -27,19 +27,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.compose.ComposespeakingtalkTheme
 import com.example.compose.md_theme_light_bottomSheet
 
 @Composable
-fun OnOffScreen(modifier: Modifier = Modifier) {
+fun OnOffScreen(
+    viewModel: OnOffScreenViewModel,
+    modifier: Modifier = Modifier,
+) {
     var onStateValue by rememberSaveable { mutableStateOf(true) }
-    var isChecked by rememberSaveable {
-        mutableStateOf(true)
-    }
+    val uiState by viewModel.onOffScreenUIState.collectAsStateWithLifecycle()
     Column {
         IconToggleButton(
-            checked = isChecked,
-            onCheckedChange = { isChecked = !isChecked },
+            checked = onStateValue,
+            onCheckedChange = { onStateValue = !onStateValue },
             modifier = Modifier
                 .padding(horizontal = 10.dp, vertical = 20.dp)
                 .align(Alignment.End)
@@ -55,14 +58,22 @@ fun OnOffScreen(modifier: Modifier = Modifier) {
         Column(
             verticalArrangement = Arrangement.Center
         ) {
-            OnOffSpeakingTalkImage(imageResourceId = if (onStateValue) R.drawable.speaking_on else R.drawable.speaking_off)
+            OnOffSpeakingTalkImage(imageResourceId = if (uiState.isOn) R.drawable.speaking_on else R.drawable.speaking_off)
             OnOffToggleButton(
-                isOn = onStateValue,
-                onCheckedChange = { onStateValue = !onStateValue })
+                isOn = uiState.isOn,
+                onCheckedChange = { viewModel.updateOnOff() })
             Spacer(modifier = Modifier.height(20.dp))
             BottomSheetContainer(
-                isChecked = isChecked,
-                onCheckedChange = { isChecked = !isChecked })
+                uiState = uiState,
+                isChecked = onStateValue,
+                onCheckedChange = { onStateValue = !onStateValue },
+                onBluetoothChanged = viewModel::updateBluetoothState,
+                onSliderValueChanged = viewModel::updateSliderValue,
+                onSelectedItemChanged = viewModel::updateSelectedSpeed,
+                onNotificationChanged = viewModel::updateNotificationState,
+                onSenderCheckChanged = viewModel::updateSenderState,
+                onTimeCheckChanged = viewModel::updateSendTimeState,
+            )
         }
     }
 
@@ -127,7 +138,6 @@ fun OnOffScreenPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            OnOffScreen()
         }
     }
 }

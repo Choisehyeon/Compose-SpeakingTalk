@@ -34,7 +34,6 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -59,9 +58,16 @@ import com.skydoves.flexible.core.rememberFlexibleBottomSheetState
 
 @Composable
 fun BottomSheetContainer(
+    uiState: OnOffScreenUIState,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-) {
+    onBluetoothChanged: () -> Unit,
+    onSliderValueChanged: (Float) -> Unit,
+    onSelectedItemChanged: (String) -> Unit,
+    onNotificationChanged: () -> Unit,
+    onSenderCheckChanged: () -> Unit,
+    onTimeCheckChanged: () -> Unit,
+    ) {
     var currentSheetTarget by remember {
         mutableStateOf(FlexibleSheetValue.FullyExpanded)
     }
@@ -89,18 +95,32 @@ fun BottomSheetContainer(
             },
         ) {
             Column(modifier = Modifier.verticalScroll(state)) {
-                SettingBluetoothItem(title = "블루투스 연결")
-                SettingSound(title = "사운드 설정")
-                SettingTextContent(title = "텍스트 내용 설정")
+                SettingBluetoothItem(
+                    title = "블루투스 연결",
+                    uiState.isBluetoothChecked,
+                    onBluetoothChanged
+                )
+                SettingSound(
+                    title = "사운드 설정",
+                    uiState,
+                    onSliderValueChanged,
+                    onSelectedItemChanged,
+                    onNotificationChanged
+                )
+                SettingTextContent(title = "텍스트 내용 설정", uiState, onSenderCheckChanged, onTimeCheckChanged)
             }
         }
     }
 }
 
 @Composable
-fun SettingBluetoothItem(title: String, modifier: Modifier = Modifier) {
+fun SettingBluetoothItem(
+    title: String,
+    isChecked: Boolean,
+    onBluetoothChanged: () -> kotlin.Unit,
+    modifier: Modifier = Modifier
+) {
     var expanded by remember { mutableStateOf(false) }
-    var checked by remember { mutableStateOf(false) }
 
     Column {
         Card(
@@ -130,8 +150,9 @@ fun SettingBluetoothItem(title: String, modifier: Modifier = Modifier) {
             Column {
                 SettingToggleItem(
                     title = "현재 상태",
-                    checked = checked,
-                    onCheckedChange = { checked = !checked })
+                    checked = isChecked,
+                    onCheckedChange = { onBluetoothChanged() }
+                )
                 SettingText(
                     title = "연결된 기기",
                     value = "",
@@ -145,12 +166,16 @@ fun SettingBluetoothItem(title: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SettingSound(title: String, modifier: Modifier = Modifier) {
+fun SettingSound(
+    title: String,
+    uiState: OnOffScreenUIState,
+    onSliderValueChanged: (Float) -> Unit,
+    onSelectedItemChanged: (String) -> Unit,
+    onNotificationChanged: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     var expanded by remember { mutableStateOf(false) }
     var spinnerExpended by remember { mutableStateOf(false) }
-    var sliderValue by remember { mutableFloatStateOf(0.5f) }
-    var checkedNotification by remember { mutableStateOf(false) }
-    var selectedText by remember { mutableStateOf("0.5") }
 
     Column {
         Card(
@@ -180,29 +205,34 @@ fun SettingSound(title: String, modifier: Modifier = Modifier) {
             Column {
                 SettingSlider(
                     title = "볼륨",
-                    sliderPosition = sliderValue,
-                    onValueChange = { sliderValue = it })
+                    sliderPosition = uiState.sliderValue,
+                    onValueChange = { onSliderValueChanged(it) })
 
                 SettingSpinner(
                     title = "읽기 속도",
                     expanded = spinnerExpended,
-                    selectedText = selectedText,
-                    onValueChange = { selectedText = it },
+                    selectedText = uiState.selectedSpeed,
+                    onValueChange = { onSelectedItemChanged(it) },
                     onExpandedChange = { spinnerExpended = !spinnerExpended },
                     onDismissRequest = { spinnerExpended = false }
                 )
 
                 SettingToggleItem(
                     title = "진동 알림",
-                    checked = checkedNotification,
-                    onCheckedChange = { checkedNotification = !checkedNotification })
+                    checked = uiState.isNotificationChecked,
+                    onCheckedChange = { onNotificationChanged() })
             }
         }
     }
 }
 
 @Composable
-fun SettingTextContent(title: String, modifier: Modifier = Modifier) {
+fun SettingTextContent(
+    title: String, uiState: OnOffScreenUIState,
+    onSenderCheckChanged: () -> Unit,
+    onTimeCheckChanged: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     var expanded by remember { mutableStateOf(false) }
     var checkedSender by remember { mutableStateOf(false) }
     var checkedTime by remember { mutableStateOf(false) }
@@ -235,12 +265,12 @@ fun SettingTextContent(title: String, modifier: Modifier = Modifier) {
             Column(modifier = Modifier.padding(bottom = 20.dp)) {
                 SettingToggleItem(
                     title = "발신자",
-                    checked = checkedSender,
-                    onCheckedChange = { checkedSender = !checkedSender })
+                    checked = uiState.isSenderChecked,
+                    onCheckedChange = { onSenderCheckChanged() })
                 SettingToggleItem(
                     title = "발신 시간",
-                    checked = checkedTime,
-                    onCheckedChange = { checkedTime = !checkedTime })
+                    checked = uiState.isSendTimeChecked,
+                    onCheckedChange = { onTimeCheckChanged() })
             }
         }
     }
@@ -470,10 +500,15 @@ fun SettingSpinner(
                     .width(80.dp),
                 decorationBox = { innerTextField ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Row(modifier = Modifier.weight(1f)){
+                        Row(modifier = Modifier.weight(1f)) {
                             innerTextField()
                         }
-                        IconButton(onClick = onExpandedChange, modifier = Modifier.size(24.dp).weight(1f)) {
+                        IconButton(
+                            onClick = onExpandedChange,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .weight(1f)
+                        ) {
                             Icon(
                                 imageVector = icon,
                                 tint = Color.White,
@@ -488,8 +523,10 @@ fun SettingSpinner(
                             speeds.forEachIndexed { _, d ->
                                 DropdownMenuItem(
                                     text = { Text(text = "$d", color = md_theme_light_background) },
-                                    onClick = { onValueChange("$d")
-                                    onExpandedChange()})
+                                    onClick = {
+                                        onValueChange("$d")
+                                        onExpandedChange()
+                                    })
                             }
                         }
                     }
@@ -506,7 +543,7 @@ fun SettingDropdown() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ItemPreview() {
-    SettingSound(title = "사운드 설정")
+
 }
 
 
@@ -516,5 +553,5 @@ fun BottomSheetPreview() {
     var isChecked by remember {
         mutableStateOf(false)
     }
-    BottomSheetContainer(isChecked, { isChecked != isChecked })
+
 }
