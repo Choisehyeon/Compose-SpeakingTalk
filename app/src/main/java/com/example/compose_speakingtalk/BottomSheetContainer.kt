@@ -61,7 +61,7 @@ fun BottomSheetContainer(
     uiState: OnOffScreenUIState,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    onBluetoothChanged: () -> Unit,
+    onBluetoothSettingClick: () -> Unit,
     onSliderValueChanged: (Float) -> Unit,
     onSelectedItemChanged: (String) -> Unit,
     onNotificationChanged: (Boolean) -> Unit,
@@ -97,8 +97,8 @@ fun BottomSheetContainer(
             Column(modifier = Modifier.verticalScroll(state)) {
                 SettingBluetoothItem(
                     title = "블루투스 연결",
-                    uiState.isBluetoothChecked,
-                    onBluetoothChanged
+                    uiState.connectDevice,
+                    onBluetoothSettingClick
                 )
                 SettingSound(
                     title = "사운드 설정",
@@ -116,8 +116,8 @@ fun BottomSheetContainer(
 @Composable
 fun SettingBluetoothItem(
     title: String,
-    isChecked: Boolean,
-    onBluetoothChanged: () -> kotlin.Unit,
+    deviceName: String,
+    onBluetoothSettingClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -148,17 +148,13 @@ fun SettingBluetoothItem(
         }
         if (expanded) {
             Column {
-                SettingToggleItem(
-                    title = "현재 상태",
-                    checked = isChecked,
-                    onCheckedChange = { onBluetoothChanged() }
-                )
                 SettingText(
                     title = "연결된 기기",
-                    value = "",
+                    value = deviceName,
                 )
                 SettingIcon(
-                    title = "블루투스 설정"
+                    title = "블루투스 설정",
+                    onBluetoothSettingClick
                 )
             }
         }
@@ -369,7 +365,7 @@ fun SettingText(title: String, value: String) {
             Spacer(Modifier.weight(1f))
             Text(
                 text = value,
-                fontSize = 20.sp,
+                fontSize = 12.sp,
                 color = md_theme_light_bottomSheetSetting,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.CenterVertically)
@@ -381,6 +377,7 @@ fun SettingText(title: String, value: String) {
 @Composable
 fun SettingIcon(
     title: String,
+    onBluetoothSettingClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -402,7 +399,7 @@ fun SettingIcon(
                 modifier = Modifier.align(Alignment.CenterVertically)
             )
             Spacer(Modifier.weight(1f))
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = { onBluetoothSettingClick() }) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
                     contentDescription = null,

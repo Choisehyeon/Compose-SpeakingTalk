@@ -15,11 +15,12 @@ class OnOffScreenViewModel: ViewModel() {
         )
     }
 
-    fun updateBluetoothState() {
+    fun updateConnectDevice(device: String) {
         _onOffScreeUIState.value = _onOffScreeUIState.value.copy(
-            isBluetoothChecked = !_onOffScreeUIState.value.isBluetoothChecked
+            connectDevice = device
         )
     }
+
 
     fun updateSliderValue(value: Float) {
         _onOffScreeUIState.value = _onOffScreeUIState.value.copy(

@@ -2,7 +2,7 @@ package com.example.compose_speakingtalk
 
 data class OnOffScreenUIState(
     val isOn: Boolean = false,
-    val isBluetoothChecked: Boolean = false,
+    val connectDevice: String = "연결안됨",
     val isNotificationChecked: Boolean = false,
     val isSenderChecked: Boolean = false,
     val isSendTimeChecked: Boolean = false,

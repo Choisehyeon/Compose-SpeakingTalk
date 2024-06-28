@@ -35,6 +35,7 @@ import com.example.compose.md_theme_light_bottomSheet
 @Composable
 fun OnOffScreen(
     viewModel: OnOffScreenViewModel,
+    onBluetoothSettingClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var onStateValue by rememberSaveable { mutableStateOf(true) }
@@ -67,7 +68,7 @@ fun OnOffScreen(
                 uiState = uiState,
                 isChecked = onStateValue,
                 onCheckedChange = { onStateValue = !onStateValue },
-                onBluetoothChanged = viewModel::updateBluetoothState,
+                onBluetoothSettingClick = onBluetoothSettingClick,
                 onSliderValueChanged = viewModel::updateSliderValue,
                 onSelectedItemChanged = viewModel::updateSelectedSpeed,
                 onNotificationChanged = viewModel::updateNotificationState,
